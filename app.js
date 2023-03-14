@@ -2,6 +2,9 @@
 const express = require("express");
 const app = express();
 const axios = require("axios");
+const hashes = require("./models/tasks");
+require("dotenv").config();
+const connectDB = require("./db/connect");
 const cors = require("cors");
 const pinataSDK = require("@pinata/sdk");
 const pinata = new pinataSDK(
@@ -68,7 +71,28 @@ app.post("/delete", async (req, res) => {
         "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJiYzdmZTcxYi0xYjUzLTQ2NWYtODA1NC04MTA2ZGZmNGM1NGMiLCJlbWFpbCI6Im1lYXRoYXJ2Z3VsYXRpQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImlkIjoiRlJBMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfSx7ImlkIjoiTllDMSIsImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxfV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiJmZWJiOWZkYTg3MWE1NDFjOTRlNiIsInNjb3BlZEtleVNlY3JldCI6IjkxZTVkOWEwMzcyNTE5ZDEwYzNmYTc5NzU0ZGQzNzYyNDU1ZmY0ODZjYTE1YjYzNjc5NTU4MTYxZTIwZTM0NjAiLCJpYXQiOjE2Nzg2MzA5MDN9.bGv32ui6F_JBAVuaE5E1nen723cE496wkSRKDzLxnEo",
     },
   };
-  const res = await axios(config);
+  const result = await axios(config);
+  console.log(result);
+  res.send("hello");
+});
+app.get("/all-nft", async (req, res) => {
+  const allHash = await hashes.find({});
+  const sendData = allHash.map((hashed) => {
+    return {
+      _id: hashed._id,
+      uri: `https://gateway.pinata.cloud/ipfs/${hashed.hash}`,
+    };
+  });
+
+  res.json(sendData);
 });
 const port = 5500;
-app.listen(port, () => console.log("server is listening on port", port));
+const start = async () => {
+  try {
+    await connectDB(process.env.MONGO_URI);
+    app.listen(port, () => console.log("server is listening on port", port));
+  } catch (error) {
+    console.log(error);
+  }
+};
+start();
